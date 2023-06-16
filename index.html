@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>SuperViz + Autodesk demo</title>
+      <meta charset="UTF-8" />
+      <link rel="icon" href="https://docs.superviz.com/favicon.ico" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+      <link href="./src/styles.css" rel="stylesheet" />
+      <script async src="./src/js/es-module-shims@1.3.6.js"></script>
+      <script type="importmap">
+         {
+            "imports": {
+               "three": "./src/js/threejs/three@0.149.0.js",
+               "three/addons/": "./src/js/threejs/examples/jsm/",
+               "three-mesh-bvh": "./src/js/threejs/three-mesh-bvh@0.5.23.js"
+            }
+         }
+      </script>
+   </head>
+
+   <body>
+      <main id="app">
+         <section id="loader-section">
+            <div class="loader"></div>
+         </section>
+         <section id="content-section" class="hide"></section>
+      </main>
+      <script type="module" src="https://unpkg.com/@superviz/sdk@latest"></script>
+      <script type="module" src="https://unpkg.com/@superviz/threejs-plugin@latest"></script>
+      <script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/pubsub-js/1.9.4/pubsub.min.js"></script>
+      <script type="module" src="src/index.js"></script>
+   </body>
+</html>
