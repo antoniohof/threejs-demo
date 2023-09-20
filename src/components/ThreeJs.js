@@ -50,7 +50,7 @@ class ThreeJs {
       controls.enablePan = false;
       controls.enableDamping = true;
       const loader = new GLTFLoader();
-      loader.load('./../../models/three_cylinder_motorcycle_engine.glb', this.onModelLoaded.bind(this), undefined, function (e) {
+      loader.load('./../../models/Superviz.glb', this.onModelLoaded.bind(this), undefined, function (e) {
          console.error(e);
       });
    }
