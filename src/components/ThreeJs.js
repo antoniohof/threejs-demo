@@ -1,4 +1,4 @@
-import { SuperViz } from './SuperViz.js';
+import { SuperVizSDK } from './SuperViz.js';
 import * as THREE from 'three';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -18,64 +18,67 @@ let controls;
 let renderer;
 
 class ThreeJs {
-   constructor() {
-      this.contentSection = document.getElementById('content-section');
-
-      PubSub.subscribe(SuperViz.MY_PARTICIPANT_JOINED, this.onMyParticipantJoined.bind(this));
-   }
-
-   onMyParticipantJoined(e, payload) {
+  constructor() {
+    this.contentSection = document.getElementById('content-section');
+    setTimeout(() => {
       this.loadModel();
-   }
+    }, 5000);
+  }
 
-   loadModel() {
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.outputEncoding = THREE.sRGBEncoding;
-      this.contentSection.appendChild(renderer.domElement);
+  loadModel() {
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    this.contentSection.appendChild(renderer.domElement);
 
-      const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
 
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0xb6b7b8);
-      scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xb6b7b8);
+    scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
 
-      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 300);
-      camera.position.set(2, 0, 2);
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 300);
+    camera.position.set(2, 0, 2);
 
-      controls = new OrbitControls(camera, renderer.domElement);
-      controls.target.set(0, 0.5, 0);
-      controls.update();
-      controls.enablePan = false;
-      controls.enableDamping = true;
-      const loader = new GLTFLoader();
-      loader.load('./../../models/three_cylinder_motorcycle_engine.glb', this.onModelLoaded.bind(this), undefined, function (e) {
-         console.error(e);
-      });
-   }
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 0.5, 0);
+    controls.update();
+    controls.enablePan = false;
+    controls.enableDamping = true;
+    const loader = new GLTFLoader();
+    loader.load(
+      'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/GlamVelvetSofa/glTF-Binary/GlamVelvetSofa.glb',
+      this.onModelLoaded.bind(this),
+      undefined,
+      function (e) {
+        console.error(e);
+      },
+    );
+  }
 
-   animate(e) {
-      requestAnimationFrame(this.animate.bind(this));
-      controls.update();
-      renderer.render(scene, camera);
-   }
+  animate(e) {
+    requestAnimationFrame(this.animate.bind(this));
+    controls.update();
+    renderer.render(scene, camera);
+  }
 
-   async onModelLoaded(e) {
-      const model = e.scene;
-      scene.add(model);
-      scene.traverse(function (obj) {
-         if (obj.type === 'Mesh') {
-            obj.geometry.computeBoundsTree();
-         }
-      });
-      this.animate();
+  async onModelLoaded(e) {
+    console.log('model loaded');
+    const model = e.scene;
+    scene.add(model);
+    scene.traverse(function (obj) {
+      if (obj.type === 'Mesh') {
+        obj.geometry.computeBoundsTree();
+      }
+    });
+    this.animate();
 
-      PubSub.publish(THREEJS_LOADED, { scene: scene, camera: camera });
-   }
+    PubSub.publish(THREEJS_LOADED, { scene: scene, camera: camera, renderer: renderer });
+  }
 
-   static get THREEJS_LOADED() {
-      return THREEJS_LOADED;
-   }
+  static get THREEJS_LOADED() {
+    return THREEJS_LOADED;
+  }
 }
 export default ThreeJs;

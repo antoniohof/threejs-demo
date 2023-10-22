@@ -1,69 +1,72 @@
-import { DEVELOPER_KEY } from '../../env.js';
 import ThreeJs from './ThreeJs.js';
+const DEVELOPER_KEY = 'SUPERVIZ_KEY';
+import { CommentsComponent } from '../../../sdk/dist/components/index.js';
 
-const SuperViz = (function () {
-   // let ::
-   let sdk = null;
-   let plugin = null;
-   // Consts ::
-   const MY_PARTICIPANT_JOINED_SDK = 'my_participant_joined';
+import SuperViz, {
+  MeetingEvent,
+  DeviceEvent,
+  MeetingState,
+  MeetingConnectionStatus,
+} from '../../../sdk/dist/index.js';
+import { CommentsAdapter, ThreeJsComponent } from '../../../threejs-plugin/dist/index.js';
 
-   const initSDK = async function (userId, roomid, name, userType) {
-      sdk = await SuperVizSdk.init(DEVELOPER_KEY, {
-         group: {
-            id: '<GROUP-ID>',
-            name: '<GROUP-NAME>',
-         },
-         participant: {
-            id: userId,
-            name: name,
-            type: userType,
-         },
-         roomId: roomid,
-         defaultAvatars: true,
-         enableFollow: true,
-         enableGoTo: true,
-         enableGather: true,
-         camsOff: false,
-         layoutPosition: 'center',
-         camerasPosition: 'right',
-      });
+const SuperVizSDK = (function () {
+  // let ::
+  let sdk = null;
+  let plugin = null;
+  // Consts ::
+  const MY_PARTICIPANT_JOINED_SDK = 'my_participant_joined';
 
-      PubSub.subscribe(ThreeJs.THREEJS_LOADED, loadPluginSDK);
+  const initSDK = async function (userId, roomid, name, userType) {
+    sdk = await SuperViz(DEVELOPER_KEY, {
+      group: {
+        id: '<GROUP-ID>',
+        name: '<GROUP-NAME>',
+      },
+      participant: {
+        id: userId,
+        name: name,
+        type: 'host',
+      },
+      roomId: roomid,
+      camsOff: true,
+      layoutPosition: 'center',
+      camerasPosition: 'right',
+      debug: true,
+      environment: 'local',
+    });
 
-      sdk.subscribe(SuperVizSdk.MeetingEvent.MY_PARTICIPANT_JOINED, onMyParticipantJoined);
-   };
+    PubSub.subscribe(ThreeJs.THREEJS_LOADED, loadPluginSDK);
 
-   const onMyParticipantJoined = function (participant) {
-      // publish that I've connected ::
-      PubSub.publish(MY_PARTICIPANT_JOINED_SDK, { sdk: sdk, participant: participant });
-   };
+    sdk.subscribe(SuperVizSdk.MeetingEvent.MY_PARTICIPANT_JOINED, onMyParticipantJoined);
+  };
 
-   const loadPluginSDK = async (e, payload) => {
-      plugin = new window.ThreeJsPlugin(payload.scene, payload.camera, payload.camera);
+  const onMyParticipantJoined = function (participant) {
+    // publish that I've connected ::
+    PubSub.publish(MY_PARTICIPANT_JOINED_SDK, { sdk: sdk });
+  };
 
-      sdk.loadPlugin(plugin, {
-         avatarConfig: {
-            height: 0,
-            scale: 1,
-         },
-         isAvatarsEnabled: true,
-         isLaserEnabled: false,
-         isMouseEnabled: true,
-         isNameEnabled: true,
-         renderLocalAvatar: false,
-      });
-   };
+  const loadPluginSDK = async (e, payload) => {
+    console.log('load!', payload);
+    const threeComponent = new ThreeJsComponent(payload.scene, payload.camera, payload.camera);
+    console.log('sdk', sdk);
+    sdk.addComponent(threeComponent);
 
-   const unloadPluginSDK = function () {
-      sdk.unloadPlugin();
-   };
+    const pinAdapter = new CommentsAdapter(payload.scene, payload.renderer, payload.camera);
 
-   // Public
-   return {
-      init: (userId, roomid, name, userType) => initSDK(userId, roomid, name, userType),
-      MY_PARTICIPANT_JOINED: MY_PARTICIPANT_JOINED_SDK,
-   };
+    const comments = new CommentsComponent(pinAdapter);
+    sdk.addComponent(comments);
+  };
+
+  const unloadPluginSDK = function () {
+    sdk.unloadPlugin();
+  };
+
+  // Public
+  return {
+    init: (userId, roomid, name, userType) => initSDK(userId, roomid, name, userType),
+    MY_PARTICIPANT_JOINED: MY_PARTICIPANT_JOINED_SDK,
+  };
 })();
 
-export { SuperViz };
+export { SuperVizSDK };
